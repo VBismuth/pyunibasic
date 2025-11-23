@@ -1,0 +1,20 @@
+# Encoding: UTF-8
+
+# Words
+ASSERT: ASSERT,
+EXIT: EXIT,
+INPUT: INPUT,
+PRINT: PRINT,
+PRINTF: PRINTF,
+PRINTLN: PRINTLN,
+PRINTFLN: PRINTFLN,
+WAIT: WAIT,
+
+# Reserved words
+result: result,
+last_err: last_err,
+last_errmsg: last_errmsg,
+last_cmd: last_cmd,
+true: true,
+false: false,
+nil: nil,

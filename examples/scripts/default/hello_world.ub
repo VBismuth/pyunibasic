@@ -1,0 +1,12 @@
+# Encoding: UTF-8
+
+# Preprocessor command are always in english
+# You can ommit it for the default, en_us subset
+# $SUBSET "default"  # this is same as $SUBSET "en_us"
+
+PRINT "Enter your name: "
+INPUT  # INPUT @var - will write from input to @var
+       # Just INPUT or INPUT @result is equvivalent
+PRINTLN
+PRINTF "Hello, {@result:0}!"
+WAIT

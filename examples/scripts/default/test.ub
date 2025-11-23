@@ -1,0 +1,10 @@
+# Encoding: UTF-8
+
+# $SUBSET "default"
+
+ASSERT 3 + 4 * 2 ^ (4 / 2) - 4 * (3 - 1) == 11
+ASSERT 11 ~= '11'
+ASSERT "Hello, " == "Hello, "
+ASSERT "\"Hello, " ~= "'Hello, \'"
+
+PRINTLN '\'This is a "TEST"\''

@@ -1,0 +1,15 @@
+# Encoding: UTF-8
+
+# This is a sample package
+
+LOADPKG $LIB("STD/STRINGS"), [REPEAT]
+
+PACKAGE test_import
+
+ALIAS CGPRINTTEXT $ARGS, CALLAPI {"name": "cg_print_text", "type": "func", "args": $ARGS}
+ALIAS PYGAME_INIT, CALLAPI {"name": "pygame_init", "type": "func"}
+ALIAS DRAWSTRLINE $ARGS, @draw_str_line($ARGS)
+
+FUNC draw_str_line(char, length) {
+    PRINTFLN {REPEAT char, length}
+}
