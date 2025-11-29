@@ -1,38 +1,8 @@
 # -*- coding: utf-8 -*-
 """ UniBasic Markup Language """
 
-import pickle
-import hashlib
 import re
-from typing import Any
-
-
-HEADER = 'SECPICKLE'
-
-
-class HashCheckFailed(Exception):
-    """ Error for failing the hash check """
-
-
-def _secure_dumps(data: Any) -> bytes:
-    """ Scure pickle.dumps """
-    bin_data: bytes = pickle.dumps(data)
-    hashed: str = hashlib.sha256(bin_data).hexdigest()
-    header: bytes = f"{HEADER}{hashed}".encode("utf-8")
-    dump_data: bytes = header + b'\r' + bin_data
-    return dump_data
-
-
-def _secure_loads(data: bytes) -> Any:
-    """ Secure pickle.loads """
-    header, body = data.split(b'\r', maxsplit=1)
-    meta: str = header.decode('utf-8')
-    meta_hash: str = meta[len(HEADER):]\
-        if meta.startswith(HEADER) else ''
-    if meta_hash != hashlib.sha256(body).hexdigest():
-        raise HashCheckFailed('mismatching hashes for '
-                              'the pickle object')
-    return pickle.loads(body)
+from typing import Any, IO
 
 
 def _get_from_subscr(source_sub: list | tuple | str, idx: int) -> Any:
@@ -46,7 +16,7 @@ class ParenthesisMismatch(Exception):
     """ Error for failing the hash check """
 
 
-class InvalidWord(Exception):
+class InvalidNumberError(Exception):
     """ Error for invalid words in ubml """
 
 
@@ -209,7 +179,7 @@ class UBMLParser:
         word: str = self._collect_string()
         res = self._process_str(word)
         match word:
-            case None | 'nil' | '':
+            case None | 'nil' | 'null' | '':
                 res = None
             case 'true':
                 res = True
@@ -230,9 +200,9 @@ class UBMLParser:
         try:
             converted_num: float | int = UBMLParser._convert_num(num)
         except ValueError:
-            raise InvalidWord(f'got invalid number "{num}"'
-                              f' in file {self._filename}'
-                              f':{self._ln}:{self._col}') from None
+            raise InvalidNumberError(f'got invalid number "{num}"'
+                                     f' in file {self._filename}'
+                                     f':{self._ln}:{self._col}') from None
         if not add_key and obj is dict:
             add_key = converted_num
         elif obj is dict:
@@ -298,3 +268,23 @@ class UBMLParser:
 def loads(text: str) -> Any:
     """ Load object from string of UBML format """
     return UBMLParser(text, '').result()
+
+
+def load(fd: IO) -> Any:
+    """ Load object from UBML file """
+    text: str = fd.read()
+    return UBMLParser(text, fd.name).result()
+
+
+def dumps(obj: Any, ident: int = 0, mark_str: str = '',
+          first_parens: bool = False, as_json: bool = False) -> str:
+    """ Serialize object into a string in UBML format """
+    if not isinstance(obj, dict | list):
+        return str(obj) if not as_json else\
+            f'["{str(obj).replace('"', '\\"')}"]'
+    if as_json:
+        mark_str = '"'
+        first_parens = True
+    nil: str = 'null' if as_json else 'nil'
+    res: str = ''
+    return res
