@@ -12,8 +12,8 @@ def _get_from_subscr(source_sub: list | tuple | str, idx: int) -> Any:
     return source_sub[idx]
 
 
-class ParenthesisMismatch(Exception):
-    """ Error for failing the hash check """
+class NotSupported(Exception):
+    """ Error for unsupported types """
 
 
 class InvalidNumberError(Exception):
@@ -71,15 +71,12 @@ class UBMLParser:
         elif isinstance(obj, list):
             obj.append(item)
         else:
-            raise TypeError(f'cannot add {type(item)} to {type(obj)}')
+            raise TypeError(f'cannot add {type(item).__name__} to '
+                            f'{type(obj).__name__}')
 
     def _check_text(self) -> bool:
         if not self._text:
             return False
-        if self._text.count('[') != self._text.count(']'):
-            raise ParenthesisMismatch(f'brackets mismatch in {self._filename}')
-        if self._text.count('{') != self._text.count('}'):
-            raise ParenthesisMismatch(f'braces mismatch in {self._filename}')
         return True
 
     def _skip_first(self):
@@ -138,7 +135,7 @@ class UBMLParser:
             self._append_to_obj(parsed, {add_key: new_obj})
             add_key = ''
         elif is_dict:
-            raise TypeError(f'unhashable type: \'{type(new_obj)}\'')
+            raise TypeError(f'unhashable type: \'{type(new_obj).__name__}\'')
         else:
             self._append_to_obj(parsed, new_obj)
         return add_key
@@ -170,16 +167,18 @@ class UBMLParser:
             self._col += 1
         if first_ch in '\'"' and first_ch != _get_from_subscr(res, -1):
             errpos, errln, errcol = first_posdata
-            raise ParenthesisMismatch(f'unterminated string literal {first_ch}'
-                                      f' in {self._filename}:{errln}'
-                                      f':{errcol} (pos: {errpos})')
+            raise SyntaxError(f'unterminated string literal {first_ch}'
+                              f' in {self._filename}:{errln}'
+                              f':{errcol} (pos: {errpos})')
         return res
 
     def _process_word(self, parsed: dict | list, add_key: Any) -> Any:
         word: str = self._collect_string()
         res = self._process_str(word)
-        match word:
-            case None | 'nil' | 'null' | '':
+        if res is None:
+            return None
+        match word.strip().strip('\n'):
+            case 'nil' | 'null' | '':
                 res = None
             case 'true':
                 res = True
@@ -262,29 +261,110 @@ class UBMLParser:
         return self._pos, self._ln, self._col
 
 
+class UBMLDumper:
+    """ Used to serialize objects """
+
+    # pylint: disable=too-many-arguments, disable=too-many-positional-arguments
+    def __init__(self, ident: int = 0, mark_str: str = '',
+                 ident_str: str = ' ', setter: str = '=',
+                 as_json: bool = False):
+        self.ident = ident
+        self.setter = ':' if as_json else setter if setter in ':=' else '='
+        self.ident_str = ident_str or ' '
+        self.mark_str = '"' if as_json else mark_str\
+            if mark_str in '"\'' else ''
+        self.as_json = as_json
+
+    def _process(self, obj: Any, level: int = 1) -> str:
+        if isinstance(obj, tuple | set):
+            raise NotSupported(f"type '{type(obj).__name__}' is not supported")
+        ident: str = self.ident_str * (self.ident * max(level, 1))
+        space: str = ' ' if ident else ''
+        nil: str = 'null' if self.as_json else 'nil'
+        newline: str = '\n' if ident else ''
+        res: str = ''
+        if isinstance(obj, dict) and obj:
+            res = '{' + newline if self.as_json or level > 1 else ''
+            items = tuple(obj.items())
+            k, v = items[0]
+            res += ident
+            res += self._process(k)
+            res += f'{self.setter}{space}'
+            res += self._process(v, level + 1)
+            for key, val in items[1:]:
+                res += ',' + newline + ident
+                res += self._process(key)
+                res += f'{self.setter}{space}'
+                res += self._process(val, level + 1)
+            res += newline + ident[:self.ident * max(level - 1, 0)] + '}'\
+                if self.as_json or level > 1 else ''
+        elif isinstance(obj, list) and obj:
+            res = '[' + newline if self.as_json or level > 1 else ''
+            res += ident
+            res += self._process(obj[0], level + 1)
+            for val in obj[1:]:
+                res += ',' + newline + ident
+                res += self._process(val, level + 1)
+            res += newline + ident[:self.ident * max(level - 1, 0)] + ']'\
+                if self.as_json or level > 1 else ''
+        elif isinstance(obj, int | float) and not isinstance(obj, bool):
+            res = str(obj)
+        else:
+            res = self._to_processed_str(obj, self.mark_str, nil)
+        return res
+
+    @staticmethod
+    def _to_processed_str(obj: Any, mark_str: str = '',
+                          nil: str = 'null') -> str:
+        if obj is None:
+            return nil
+        if isinstance(obj, bool):
+            return str(obj).lower()
+        to_replace: dict = {'\\': '\\\\', '\n': '\\n', '\t': '\\t'}
+        if mark_str and mark_str in '"\'':
+            to_replace[mark_str] = f'\\{mark_str}'
+        res = str(obj)
+        for orig, new in to_replace.items():
+            res = res.replace(orig, new)
+        if obj and obj[0] in '+-0123456789':
+            return '"' + res + '"'
+        return mark_str + res + mark_str
+
+    def set_ident(self, new_ident: int):
+        """ Set ident """
+        self.ident = new_ident or self.ident
+
+    def result(self, obj: Any) -> str:
+        """ Serialize object """
+        return self._process(obj)
+
+
 ########################################################
 # Main functions
 ########################################################
 def loads(text: str) -> Any:
-    """ Load object from string of UBML format """
+    """ Loads object from the string of UBML format and returns it """
     return UBMLParser(text, '').result()
 
 
 def load(fd: IO) -> Any:
-    """ Load object from UBML file """
+    """ Loads object from UBML file and returns it """
     text: str = fd.read()
     return UBMLParser(text, fd.name).result()
 
 
+# pylint: disable=too-many-arguments, disable=too-many-positional-arguments
 def dumps(obj: Any, ident: int = 0, mark_str: str = '',
-          first_parens: bool = False, as_json: bool = False) -> str:
-    """ Serialize object into a string in UBML format """
-    if not isinstance(obj, dict | list):
-        return str(obj) if not as_json else\
-            f'["{str(obj).replace('"', '\\"')}"]'
-    if as_json:
-        mark_str = '"'
-        first_parens = True
-    nil: str = 'null' if as_json else 'nil'
-    res: str = ''
-    return res
+          ident_str: str = ' ', setter: str = '=',
+          as_json: bool = False) -> str:
+    """ Dumps object into the string of UBML format and returns it """
+    return UBMLDumper(ident, mark_str, ident_str, setter, as_json).result(obj)
+
+
+def dump(obj: Any, fd: IO, ident: int = 0, mark_str: str = '',
+         ident_str: str = ' ', setter: str = '=',
+         as_json: bool = False) -> int:
+    """ Dumps object into UBML file and returns number of bytes written """
+    text: str = UBMLDumper(ident, mark_str, ident_str,
+                           setter, as_json).result(obj)
+    return fd.write(text)
