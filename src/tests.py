@@ -1,7 +1,11 @@
 # -*- coding: utf-8 -*-
 """ Tests """
 
+import time
+import json
+
 from textdata import TextData, EOF
+import ubml
 
 
 def test_textdata():
@@ -60,11 +64,56 @@ def test_textdata():
         f'as intended {(td + td).get_text()} != {test_text * 2}'
 
 
+def test_ubml():
+    """ testing ubml """
+    test_dict: dict = {'Name': 'John', 'Sirname': 'Williams', 'Age': 38,
+                       'pets': [{'name': 'Adam', 'specie': 'cat'},
+                                {'name': 'Tomas', 'specie': 'pig'}],
+                       'Money': 34912.0398, 'Debt': -384.2, 'alive': True,
+                       'Friends': None, 'Enemies': ['Craig']}
+
+    assert ubml.loads(ubml.dumps(test_dict)) == test_dict, 'Something went' +\
+        'wrong after serializing and deserealizing test_dict\n' +\
+        f'Expected: {str(test_dict)}, ' +\
+        f'Got: {str(ubml.loads(ubml.dumps(test_dict)))}'
+
+    json_dict: str = json.dumps(test_dict, ensure_ascii=False)
+    jsonlike_ubml_dict: str = ubml.dumps(test_dict, as_json=True)
+    assert json_dict == jsonlike_ubml_dict, \
+        'Json dump and ubml json-like dump are not the same\n' +\
+        f'Expected: {json_dict}, Got: {jsonlike_ubml_dict}'
+
+    ubml_expect1: str = 'Name=John,Sirname=Williams,Age=38,' +\
+        'pets=[{name=Adam,specie=cat},{name=Tomas,specie=pig}],' +\
+        'Money=34912.0398,Debt=-384.2,alive=true,friends=nil,' +\
+        'Enemies=[Craig]'
+    ubml_dumped1: str = ubml.dumps(test_dict)
+    assert ubml_dumped1 == ubml_expect1, \
+        'Actual dump and expected dump mismatch\n' +\
+        f'Expected: {ubml_expect1}, Got: {ubml_dumped1}'
+
+
 if __name__ == "__main__":
 
-    print("Test start!")
-    tests: tuple = (test_textdata,)
+    print("Starting tests\n")
+    outer_start_time: float = time.perf_counter()
+    tests: tuple = (test_textdata, test_ubml)
+    counter: int = 0
+    successes: int = 0
     for test in tests:
-        print(f'Testing: {test.__name__}')
-        test_textdata()
-    print('Test end!')
+        counter += 1
+        start_time: float = time.perf_counter()
+        print(f'Testing: {test.__name__} .', end='')
+        try:
+            print(' . ', end='')
+            test_textdata()
+            print('. ', end='')
+        except AssertionError as err:
+            print('FAILURE\nGot:', err)
+        else:
+            print('SUCCESS')
+            successes += 1
+        print(f'Elapsed {time.perf_counter() - start_time} seconds\n')
+    print(f'Finished tests in {time.perf_counter() - outer_start_time}',
+          'seconds total')
+    print(f'Result: {successes}/{counter}')
