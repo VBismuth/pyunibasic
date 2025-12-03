@@ -7,11 +7,11 @@ This file contains some ideas for the unibasic lang
 ---
 
 ## What to add
-- File worker (load files, zips, working with modules*)
-- Modules (zip archive with files. See below)
-- UBML (unibasic markup lang, like jsonh or whatever) (and UBMLB)
-- Subsets (unibasic in different lang, subset switches
-- Errors for interpreter for the above
+- [ ] File worker (load files, zips, working with modules*)
+- [ ] Modules (zip archive with files. See below)
+- [x] UBML (unibasic markup lang, like jsonh or whatever)
+- [ ] Subsets (unibasic in different lang, subset switches
+- [ ] Errors for interpreter for the above
 ---
 
 ## Modules (file archives)
