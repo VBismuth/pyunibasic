@@ -79,17 +79,18 @@ class UBMLParser:
             return False
         return True
 
-    def _skip_first(self):
+    def _skip_first_br(self):
         if self._text[self._pos] in '{[':  # ]}
             self._pos += 1
             self._col += 1
+            self._textsize -= 1 if self._text.strip()[-1] in '}]' else 0
 
     def _process_text(self) -> dict | list | None:
         if not self._check_text() or\
                 self._detect_object_type(self._text) is None:
             return None
         obj = self._detect_object_type(self._text[self._pos:])
-        self._skip_first()
+        self._skip_first_br()
         parsed: dict | list = obj()
         add_key: Any = ''
 
@@ -158,8 +159,8 @@ class UBMLParser:
                 self._col += 1
                 break
             elif ch in '}],:=' and first_ch not in '\'"':
-                self._pos += 1
-                self._col += 1
+                self._pos += 1 if ch not in ':=' else 0
+                self._col += 1 if ch not in ':=' else 0
                 break
             else:
                 res += ch
