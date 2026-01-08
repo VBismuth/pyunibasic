@@ -92,6 +92,16 @@ def test_ubml():
         'Actual dump and expected dump mismatch\n' +\
         f'Expected: {ubml_expect1}, Got: {ubml_dumped1}'
 
+    try:
+        ubml.loads('[test:]')
+    except ubml.InvalidSymbolError:
+        pass
+    else:
+        raise AssertionError('Expected error from "[test:]", but it passed')
+
+    assert ubml.loads('[a, {b: c}]') == ['a', {'b': 'c'}], \
+        'Wrong parsing [a, {b: c}]'
+
 
 if __name__ == "__main__":
 
@@ -108,7 +118,8 @@ if __name__ == "__main__":
             print(' . ', end='')
             test_textdata()
             print('. ', end='')
-        except AssertionError as err:
+        except (AssertionError, ubml.InvalidSymbolError,
+                ubml.InvalidNumberError, ubml.NotSupported) as err:
             print('FAILURE\nGot:', err)
         else:
             print('SUCCESS')
