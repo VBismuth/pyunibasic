@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-""" Errors for unibasic interpreter """
+""" Errors for unibasic"""
 
 from textpointer import TextPointer as Pointer
 from textdata import DEFAULT_FILENAME

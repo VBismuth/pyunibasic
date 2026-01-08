@@ -1,5 +1,5 @@
 name = master,
 desc = nil,
 author = nil,
-version = 0.0.1,
+version = "0.0.1",
 license = MIT

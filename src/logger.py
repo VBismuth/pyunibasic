@@ -69,7 +69,7 @@ class Logger:
                 header += LOG_SEPARATOR + '\n\n'
                 file.write(header)
             else:
-                raise OSError(f'Error @Logger: {self.logfile}' +
+                raise OSError(f'Error @Logger: {self.logfile} '
                               'is not writable!')
 
     def check_logfile(self) -> bool:
@@ -103,13 +103,13 @@ class Logger:
         if not self.silent:
             print(whole_msg, end='', flush=True)
         if not self.check_logfile():
-            raise FileNotFoundError("Error @Logger: " +
+            raise FileNotFoundError("Error @Logger: "
                                     f"no logfile '{self.logfile}' found!")
         if no_log:
             return
         with open(self.logpath, 'a', encoding='utf8') as file:
             if not file.writable():
-                raise OSError("Error @Logger:" +
+                raise OSError("Error @Logger: "
                               f"'{self.logfile}' is not writable!")
             file.write(whole_msg)
 
@@ -120,9 +120,10 @@ class Logger:
         tracelist: list = tb.format_list(rawtrace)
         errtype: str = type(err).__name__
         errname: str = str(err.__name__) if errtype == 'type' else str(errtype)
-        header: str = f'\n{IDENT}Traceback (most recent call last):\n{IDENT*2}'
-        message = header + (IDENT*2).join(str(i) for i in tracelist
-                                          if "log_trace" not in i)
+        header: str = f'\n{IDENT}Traceback (most recent call last):' +\
+                      f'\n{IDENT * 2}'
+        message = header + (IDENT * 2).join(str(i) for i in tracelist
+                                            if "log_trace" not in i)
         message += IDENT + errname
         message += ': ' + msg if len(message) > 1 else ''
         message += '\n'

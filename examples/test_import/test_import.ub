@@ -2,14 +2,27 @@
 
 # This is a sample package
 
-LOADPKG $LIB("STD/STRINGS"), [REPEAT]
+LOADPKG $LIB("STD/STRTOOLS"), [REPEAT]
+LOADPKG $LIB("STD/CALLS"), [CALLAPI, CALLCFFI]
+LOADPKG $LIB("STD/PLATFORM")
 
 PACKAGE test_import
 
-ALIAS CGPRINTTEXT $ARGS, CALLAPI {"name": "cg_print_text", "type": "func", "args": $ARGS}
-ALIAS PYGAME_INIT, CALLAPI {"name": "pygame_init", "type": "func"}
-ALIAS DRAWSTRLINE $ARGS, @draw_str_line($ARGS)
+SET _libname!STR 'example'
+ALIAS CGPRINTTEXT, CALLAPI name: "cg_print_text", type: "func", args: $ARGS
+ALIAS PYGAME_INIT, CALLAPI name: "pygame_init", type: "func"
+ALIAS DRAWSTRLINE, @draw_str_line $ARGS
+ALIAS ADD, @add $ARGS
+ALIAS CIRCAREA, @circ_area $ARGS
+ALIAS C_ADD, CALLCFFI lib: PLATFORM<>DLLNAME(_libname), type: 'func', args: $ARGS
 
-FUNC draw_str_line(char, length) {
+FUNC draw_str_line(char ! STR, length ! INT) {
     PRINTFLN {REPEAT char, length}
+}
+
+FUNC add(a, b) { OUT a + b ELSE nil}
+
+FUNC circ_area(r ! FLOAT) ! FLOAT {
+    LET pi 3.14
+    OUT pi * r ^ 2
 }
