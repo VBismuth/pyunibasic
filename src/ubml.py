@@ -34,7 +34,7 @@ class UBMLParser:
         self._ln: int = 1
         self._col: int = 1
         self._filename: str = filename or '<stdin>'
-        self._text: str = text or '{}'
+        self._text: str = text.strip() or '{}'
         self._textsize: int = len(text)
 
     @staticmethod
@@ -83,11 +83,10 @@ class UBMLParser:
         if self._text[self._pos] in '{[':  # ]}
             self._pos += 1
             self._col += 1
-            self._textsize -= 1 if self._text.strip()[-1] in '}]' else 0
 
     def _process_text(self) -> dict | list | None:
         if not self._check_text() or\
-                self._detect_object_type(self._text) is None:
+                self._detect_object_type(self._text[self._pos:]) is None:
             return None
         obj = self._detect_object_type(self._text[self._pos:])
         self._skip_first_br()
@@ -159,8 +158,6 @@ class UBMLParser:
                 self._col += 1
                 break
             elif ch in '}],:=' and first_ch not in '\'"':
-                self._pos += 1 if ch not in ':=' else 0
-                self._col += 1 if ch not in ':=' else 0
                 break
             else:
                 res += ch
@@ -280,7 +277,7 @@ class UBMLDumper:
         if isinstance(obj, tuple | set):
             raise NotSupported(f"type '{type(obj).__name__}' is not supported")
         ident: str = self.ident_str * (self.ident * max(level, 1))
-        space: str = ' ' if ident else ''
+        space: str = ' ' if ident or self.as_json else ''
         nil: str = 'null' if self.as_json else 'nil'
         newline: str = '\n' if ident else ''
         res: str = ''
@@ -293,7 +290,7 @@ class UBMLDumper:
             res += f'{self.setter}{space}'
             res += self._process(v, level + 1)
             for key, val in items[1:]:
-                res += ',' + newline + ident
+                res += ',' + newline + ident if ident else ',' + space
                 res += self._process(key)
                 res += f'{self.setter}{space}'
                 res += self._process(val, level + 1)
@@ -304,7 +301,7 @@ class UBMLDumper:
             res += ident
             res += self._process(obj[0], level + 1)
             for val in obj[1:]:
-                res += ',' + newline + ident
+                res += ',' + newline + ident if ident else ',' + space
                 res += self._process(val, level + 1)
             res += newline + ident[:self.ident * max(level - 1, 0)] + ']'\
                 if self.as_json or level > 1 else ''
