@@ -3,9 +3,29 @@
 
 import time
 import json
+from typing import Any, Callable
 
 from textdata import TextData, EOF
 import ubml
+
+
+def assert_test(got: Any, expected: Any, errmsg: str) -> str:
+    """ Test if whe got what we expected """
+    if got == expected:
+        return 'SUCCESS'
+    if errmsg:
+        errmsg += '\n |' if errmsg[-1] != '\n' else ' |'
+    return f'FAIL\n⤷|{errmsg}Expected: {str(expected)};\n |Got: {str(got)}'
+
+
+def error_test(action: Callable, expected: Exception,
+               args: tuple | None = None) -> str:
+    """ Test if action throw an expected error """
+    try:
+        action(*args) if args else action()
+    except expected:
+        return 'SUCCESS'
+    return f'FAIL\n⤷|Expected {expected} error, but passed'
 
 
 def test_textdata():
@@ -103,8 +123,8 @@ def test_ubml():
         'Wrong parsing [a, {b: c}]'
 
 
-if __name__ == "__main__":
-
+def main():
+    """ Main function """
     print("Starting tests\n")
     outer_start_time: float = time.perf_counter()
     tests: tuple = (test_textdata, test_ubml)
@@ -128,3 +148,7 @@ if __name__ == "__main__":
     print(f'Finished tests in {time.perf_counter() - outer_start_time}',
           'seconds total')
     print(f'Result: {successes}/{counter}')
+
+
+if __name__ == "__main__":
+    main()
