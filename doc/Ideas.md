@@ -52,27 +52,23 @@ Note: Maybe just check every file by its hash
 ---
 
 ## UBML
-Looks just like jsonh. Unibasic will use it to store it's objs, like
-UBMLDUMPS(@obj, 'path/to/example.ubml'), @obj = UBMLLOADS('path/to/example.ubml')
-
-Also binary form with the secure pickle. Commands looks like
-UBMLBDUMPS(@obj, 'path/to/example.ubmlb'), @obj = UBMLLOADS('path/to/example.ubmlb')
+Inspired by yaml and jsonh, also json compatible. It's supported by any UB interpreter. You can use it to store dicts/lists in unibasic, like
+``` unibasic 
+UBMLDUMPS(@obj, 'path/to/example.ubml'); @obj ! MAP = UBMLLOADS('path/to/example.ubml')```
 
 Features:
 - File is either list of objs (\[\]) or dict of objs ({})
-- You can ommit braces for the file (not for data), it should detect automatically
-- Strings without quotes, like {hello: world}
+- You can ommit braces for the file (not for data), it should detect automatically ({} by default)
+- Strings without quotes, like {hello: world}. Also `hello\, this is \"whole\", and this is separated` will be parsed like this `['hello, this is "whole"', 'and this is separated']`
 - Types of data:
-    - String (simple_string) - it may start with a number
-    - None (nil) - convert to None, or later into NIL for interpreter
+    - String (simple_string, this also valid) - it may start with a number, but only in quotes
+    - None (nil) - convert to None, or later into nil for ub interpreter
     - Bool (true or false) - convert to None, or later into nil for interpreter
-    - Number (0.02, -23, etc) - convert to None, or later into nil for interpreter
+    - Number (0.02, -23, etc) - convert to int or float
     - List
     - Dict
     - Comment (# This will be skipped)
 
-Note: may use unibasic's lexer and filter allowed tokens, and may work with subsets
-      or just create lexer for it specifically, so it will be standalone
 ---
 
 ## Subsets
