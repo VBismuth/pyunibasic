@@ -104,13 +104,13 @@ class TextData:
         self._pointer.recede(newline, prev_col)
         return self.get_char()
 
-    def __eq__(self, other: object) -> bool:
+    def __eq__(self, other) -> bool:
         return type(self) is type(other) and self._text == other.get_text()
 
-    def __ne__(self, other: object) -> bool:
+    def __ne__(self, other) -> bool:
         return type(self) is not type(other) or not self == other
 
-    def __add__(self, other: object) -> object:
+    def __add__(self, other) -> 'TextData':
         if type(self) is not type(other):
             err = TypeError("unsupported operand type(s) for +: "
                             f"'{type(self).__name__}' and "

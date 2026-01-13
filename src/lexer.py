@@ -2,6 +2,7 @@
 """ Tokenizer for unibasic v0.01 """
 
 from enum import Enum
+from typing import Tuple
 
 from textdata import TextData, EOF
 from textdata import TextPointer as Pointer
@@ -67,7 +68,8 @@ class Token:
 class Lexer(TextData):
     """ Tokenizing text """
 
-    def tokenize(self, other: TextData | None = None) -> (list[Token], Error):
+    def tokenize(self, other: TextData | None = None
+                 ) -> Tuple[list[Token], Error]:
         """ Token generator
             If argument is ommited, tokenizes self
             Returns list of Tokens and no_error bool """
@@ -78,7 +80,7 @@ class Lexer(TextData):
         result: list[Token] = []
         while this.get_char() != EOF and not error:
             char: str = this.get_char()
-            TT: type = TokenType
+            TT: type[TokenType] = TokenType
             if char in ' \t':
                 this.next()
                 continue
@@ -123,6 +125,7 @@ class Lexer(TextData):
     # TODO: implement interpreter error handling
     @staticmethod
     def process_comment(this: TextData) -> str:
+        """ Process text as unibasic comment string """
         res: str = ''
         while this.next() not in ('\n', EOF):
             res += this.get_char()
@@ -130,6 +133,7 @@ class Lexer(TextData):
 
     @staticmethod
     def process_as_string(this: TextData) -> (str, Error | None):
+        """ Process text as string """
         quote: str = this.get_char()
         res: str = quote or ''
         pos_start = this.get_pointer()
@@ -142,6 +146,7 @@ class Lexer(TextData):
 
     @staticmethod
     def process_as_keyword(this: TextData) -> (Token, Error | None):
+        """ Process text as keyword """
         res: str = ""
         error: Error | None = None
         start_pos: Pointer = this.get_pointer()
@@ -159,6 +164,7 @@ class Lexer(TextData):
 
     @staticmethod
     def process_as_number(this: TextData) -> (Token, Error | None):
+        """ Process text as int or float """
         res: str = ""
         dots: int = 0
         error: Error | None = None

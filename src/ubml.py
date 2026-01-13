@@ -38,7 +38,8 @@ class UBMLParser:
         self._textsize: int = len(text)
 
     @staticmethod
-    def _detect_object_type(text: str) -> type[dict, list]:
+    def _detect_object_type(
+            text: str) -> type[dict[Any, Any]] | type[list[Any]]:
         if text.startswith('{'):  # }
             return dict
         if text.startswith('['):  # ]
@@ -130,7 +131,7 @@ class UBMLParser:
 
     def _process_new_obj(self, parsed: dict | list, add_key: Any) -> Any:
         is_dict: bool = isinstance(parsed, dict)
-        new_obj: dict | list = self._process_text()
+        new_obj: dict | list = self._process_text() or {}
         if is_dict and add_key:
             self._append_to_obj(parsed, {add_key: new_obj})
             add_key = ''
@@ -143,7 +144,7 @@ class UBMLParser:
     def _collect_string(self) -> str:
         res: str = ''
         first_ch: str = self._text[self._pos]
-        first_posdata: tuple[int] = (self._pos, self._ln, self._col)
+        first_posdata: tuple[int, int, int] = (self._pos, self._ln, self._col)
         while self._pos < self._textsize:
             ch: str = self._text[self._pos]
             next_ch: str | None = _get_from_subscr(self._text, self._pos + 1)
@@ -172,16 +173,16 @@ class UBMLParser:
 
     def _process_word(self, parsed: dict | list, add_key: Any) -> Any:
         word: str = self._collect_string()
-        res = self._process_str(word)
+        res: str | bool | None = self._process_str(word)
         if res is None:
             return None
-        match word.strip().strip('\n'):
-            case 'nil' | 'null' | '':
-                res = None
-            case 'true':
-                res = True
-            case 'false':
-                res = False
+        stripped_word: str = word.strip().strip('\n')
+        if stripped_word in ('nil', 'null', ''):
+            res = None
+        elif stripped_word == 'true':
+            res = True
+        elif stripped_word == 'false':
+            res = False
         if isinstance(parsed, dict) and add_key:
             self._append_to_obj(parsed, {add_key: res})
             add_key = ''
@@ -191,11 +192,12 @@ class UBMLParser:
             self._append_to_obj(parsed, res)
         return add_key
 
-    def _process_num(self, parsed: dict | list, add_key: str) -> str:
+    def _process_num(self, parsed: dict | list,
+                     add_key: int | float | str) -> int | float | str:
         obj: type = type(parsed)
         num = self._cut_text_part()
         try:
-            converted_num: float | int = UBMLParser._convert_num(num)
+            converted_num: float | int | str = UBMLParser._convert_num(num)
         except ValueError:
             raise InvalidNumberError(f'got invalid number "{num}"'
                                      f' in file {self._filename}'
@@ -254,7 +256,7 @@ class UBMLParser:
         """ Result of parsing """
         return self._process_text()
 
-    def get_pos_data(self) -> tuple[int]:
+    def get_pos_data(self) -> tuple[int, int, int]:
         """ Returns tuple of pos data"""
         return self._pos, self._ln, self._col
 
