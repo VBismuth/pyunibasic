@@ -28,7 +28,7 @@ def error_test(action: Callable, expected: Exception,
         action(*args) if args else action()
     except expected:
         return 'SUCCESS'
-    return f'FAIL\n⤷|Expected {expected} error, but passed'
+    return f'FAIL\n  ⤷|Expected {expected} error, but passed'
 
 
 def subtests_run(meta: dict, res: (str, bool)):
@@ -41,10 +41,11 @@ def subtests_run(meta: dict, res: (str, bool)):
 
 
 def subtest_result(desc: str, result: str,
-                   sep: str = '. ') -> (str, bool):
+                   sep: str = '. ',
+                   msg: str = '') -> (str, bool):
     ''' Subtest result '''
     default_len: int = DEFAULT_LINE_SIZE
-    ending: str = ''
+    ending: str = '  ⤷|' + msg if msg and isinstance(msg, str) else ''
 
     if 'FAIL' in result and '\n' in result:
         result, ending = result.split('\n', maxsplit=1)
@@ -187,23 +188,24 @@ def test_ubml() -> dict:
     test_meta: dict = {'subtests_number': 0,
                        'successes': 0,
                        'overall': True}
-
     subtests_run(test_meta, subtest_result(
         'Parsing empty string',
         assert_test(
             ubml.loads(''),
             {},
             'Wrong parsing of empty string'
-        )
+        ),
+        msg=f'Result: {ubml.loads('')}'
     ))
 
     subtests_run(test_meta, subtest_result(
-        'Parsing nested structures [a, {b: c}]',
+        'Parsing nested structures',
         assert_test(
             ubml.loads('[a, {b: c}]'),
             ['a', {'b': 'c'}],
             'Wrong parsing [a, {b: c}]'
-        )
+        ),
+        msg=f'Result: {ubml.loads('[a, {b: c}]')}'
     ))
 
     test_dict: dict = {
@@ -274,6 +276,49 @@ def test_ubml() -> dict:
                 ubml.InvalidSymbolError
             )
         ))
+    large_object: list[dict] = [test_dict.copy() for _ in range(10_000)]
+    times: list[float] = []
+    t_treshold: float = 20.0
+
+    timestart: float = time.perf_counter()
+    large_text: str = json.dumps(large_object)
+    times.append(time.perf_counter() - timestart)
+    timestart = time.perf_counter()
+    ubml.dumps(large_object)
+    times.append(time.perf_counter() - timestart)
+    t_diff: float = times[1] / times[0]
+    subtests_run(test_meta, subtest_result(
+        'UBML dumps performance comparison with JSON '
+        f'(~{len(large_object) * len(large_object[0])} elements)',
+        assert_test(
+            t_diff <= t_treshold,
+            True,
+            f'Dumping took too much -> {times[1]:.6f}, x{t_diff:.2f} '
+            f'(> {t_treshold}) of JSON time,'
+        ),
+        msg=f'Done in {times[1]:.6f}, x{t_diff:.2f} of JSON time'
+    ))
+
+    times = []
+    timestart = time.perf_counter()
+    json.loads(large_text)
+    times.append(time.perf_counter() - timestart)
+    timestart = time.perf_counter()
+    ubml.loads(large_text)
+    times.append(time.perf_counter() - timestart)
+    t_diff = times[1] / times[0]
+    subtests_run(test_meta, subtest_result(
+        'UBML loads performance comparison with JSON '
+        f'({len(large_text) / 1024:.2f} kb)',
+        assert_test(
+            t_diff <= 100.0,
+            True,
+            f'Loading took too much -> {times[1]:.6f}, x{t_diff:.2f} '
+            f'(> {t_treshold}) of JSON time'
+        ),
+        msg=f'Done in {times[1]:.6f}, x{t_diff:.2f} of JSON time'
+    ))
+
     return test_meta
 
 
