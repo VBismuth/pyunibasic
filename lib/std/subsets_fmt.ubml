@@ -1,0 +1,18 @@
+en_us = {
+    std_endl = std_endl,
+    PRINT = PRINT,
+    PRINTLN = PRINTLN,
+    PRINTF = PRINTF,
+    PRINTFLN = PRINTFLN,
+    INPUT = INPUT,
+    WAIT = WAIT,
+},
+ru_ru = {
+    std_endl = стд_кнцстр,
+    PRINT = ВЫВОД,
+    PRINTLN = ВЫВОДНС,
+    PRINTF = ВЫВОДФ,
+    PRINTFLN = ВЫВОДФНС,
+    INPUT = ВВОД,
+    WAIT = ЖДИ,
+},

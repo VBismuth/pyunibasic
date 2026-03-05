@@ -1,6 +1,9 @@
 # Encoding: UTF-8
 
-# Words
+# Special Keywords
+LIB: LIB
+
+# Keywords
 ASSERT: ASSERT,
 EXIT: EXIT,
 INPUT: INPUT,
@@ -10,7 +13,23 @@ PRINTLN: PRINTLN,
 PRINTFLN: PRINTFLN,
 WAIT: WAIT,
 
-# Reserved words
+#Types
+NIL:    NIL,
+ID:     ID,
+STR:    STR,
+INT8:   INT8,
+INT16:  INT16,
+INT32:  INT32,
+INT:    INT,
+UINT8:  UINT8,
+UINT16: UINT16,
+UINT32: UINT32,
+UINT:   UINT,
+FLOAT: FLOAT,
+DOUBLE: DOUBLE,
+NUMERIC: NUMERIC,
+
+# Reserved identifiers
 result: result,
 last_err: last_err,
 last_errmsg: last_errmsg,

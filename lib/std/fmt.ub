@@ -1,0 +1,55 @@
+// Encoding: UTF-8
+
+PACKAGE !fmt
+
+LOAD $LIB("std/strtools"), [!STRJOIN]
+
+
+CONST std_endl = (FN () {
+    IF (CORE_CALL("get_platform", NIL) ELSE FATAL("Couldn't get platform!")) == "POSIX"
+        THEN RET "\n"
+    ELSE RET "\n\r"
+})()
+
+ALIAS PRINT, @stdcout(STRJOIN " ", $ARGS)
+ALIAS PRINTF, @stdcout(@formatstr STRJOIN " ", $ARGS)
+ALIAS PRINTLN, FN (msgs % STR[]) {
+    SET msg % STR = STRJOIN(" ", msgs) + std_endl
+    PRINT msg
+}
+
+ALIAS PRINTFLN, FN (msgs % STR[]) {
+    SET msg % STR = STRJOIN(" ", msgs) + std_endl
+    PRINTF msg
+}
+
+ALIAS INPUT, @stdcin
+ALIAS WAIT, FN (delay as FLOAT = 0.0) {
+    //! @title: WAIT command
+    //! @desc: if delay is 0 or NIL, then it awayts user input
+    //! otherwise it sleeps for <delay> seconds
+    IF delay <= 0 OR delay == NIL {
+        PRINTLN $TANSLATE "std.messages.console.press_any_key"
+        LET _ = @stdcin
+    } ELSE {
+        CORE_CALL(!sleep, delay)
+    }
+}
+
+FN stdcout(msg AS STR, flush AS BOOL = false, log AS BOOL = false) {
+    CORE_CALL("stdcout", [msg, flush]) ELSE FATAL("Error: CORE couldn't call stdcout", fulltrace=true)
+    IF log THEN LOG "CORE", "INFO", "stdcout: " + msg
+}
+
+FN stdcin(log AS BOOL = false) % (STR || NIL) {
+    LET result = $CORE_CALL("stdin", NIL) ELSE FATAL("Error: CORE couldn't call stdcin", fulltrace=true)
+    IF log THEN LOG "CORE", "INFO", "stdcin: " + msg
+    RET result AS STR ELSE NIL
+}
+
+FN formatstr(string as STR) % STR {
+    // FIXME: rewrite to native UB
+    CORE_CALL("tmpfunc_formatstr", [string, $RUNTIME_CONTEXT])
+}
+
+MAINFN THEN FATAL("Do not run as executable")

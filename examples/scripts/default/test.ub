@@ -1,10 +1,21 @@
-# Encoding: UTF-8
+// Encoding: UTF-8
 
-# $SUBSET "default"
+//! @title test.ub
+//! @desc this is a simple assert testing
 
-ASSERT 3 + 4 * 2 ^ (4 / 2) - 4 * (3 - 1) == 11
-ASSERT 11 ~= '11'
-ASSERT "Hello, " == "Hello, "
-ASSERT "\"Hello, " ~= "'Hello, \'"
+// $SUBSET "default"
+$PRELUDE
 
-PRINTLN '\'This is a "TEST"\''
+LOADPKG $LIB("std/testing"), [!ASSERT]
+
+MAINFN % UINT8 {
+
+    ASSERT 3 + 4 * 2 ^ (4 / 2) - 4 * (3 - 1) == 11
+    ASSERT 11 ~= '11'
+    ASSERT "Hello, " == "Hello, "
+    ASSERT "\"Hello, " ~= "'Hello, \'"
+
+    PRINTLN '\'This is a "TEST"\''
+
+    RETURN 0
+}

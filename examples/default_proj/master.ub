@@ -1,5 +1,6 @@
-# Encoding: UTF-8
+// Encoding: UTF-8
 
 $SUBSET "default"
+$PRELUDE
 
-PRINTF "Hello, World!"
+PRINTLN "Hello, World!"

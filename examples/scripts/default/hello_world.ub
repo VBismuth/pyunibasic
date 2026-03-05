@@ -1,12 +1,22 @@
-# Encoding: UTF-8
+// Encoding: UTF-8
 
-# Preprocessor command are always in english
-# You can ommit it for the default, en_us subset
-# $SUBSET "default"  # this is same as $SUBSET "en_us"
+// Preprocessor command are always in english
+// You can ommit it for the default, en_us subset
+// $SUBSET !default  // this is same as $SUBSET !en_us
 
-PRINT "Enter your name: "
-INPUT  # INPUT @var - will write from input to @var
-       # Just INPUT or INPUT @result is equvivalent
-PRINTLN
-PRINTF "Hello, {@result:0}!"
-WAIT
+$PRELUDE
+/// so you don't have to write
+LOADPKG $LIB("std/fmt"), [!PRINTLN,
+                          !PRINTFLN,
+                          !PRINT,
+                          !INPUT,
+                          !WAIT] ///
+
+MAINFN {
+    PRINT "Enter your name: "
+    INPUT  // INPUT $VAR - will write from input to $VAR
+           // Just INPUT or INPUT $VAR is equvivalent
+    PRINTLN
+    PRINTFLN "Hello, {$VAR[STR]:~1}!"
+    WAIT
+}

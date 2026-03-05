@@ -1,0 +1,13 @@
+// Encoding: UTF-8
+
+PACKAGE !testing
+
+ALIAS ASSERT, FN(expression AS BOOL) {
+    IF NOT expression THEN FATAL(!Assertion Error)
+}
+
+// WIP
+ALIAS TEST, $NOTIMPLEMENTED
+ALIAS PERFORMANCE, $NOTIMPLEMENTED
+
+MAINFN THEN FATAL("Do not run as executable")

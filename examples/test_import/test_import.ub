@@ -1,28 +1,30 @@
-# Encoding: UTF-8
+// Encoding: UTF-8
 
-# This is a sample package
+//! @title test_import
+//! @desc This is a sample package
 
-LOADPKG $LIB("STD/STRTOOLS"), [REPEAT]
-LOADPKG $LIB("STD/CALLS"), [CALLAPI, CALLCFFI]
-LOADPKG $LIB("STD/PLATFORM")
+LOADPKG $LIB("std/strtools"), [!REPEAT]
+LOADPKG $LIB("std/calls"), [!CALLAPI, !CALLCFFI]
+LOADPKG $LIB("std/platform") ["DLLNAME"]
 
 PACKAGE test_import
 
-SET _libname!STR 'example'
+SET _libname % STR = !example
+
 ALIAS CGPRINTTEXT, CALLAPI name: "cg_print_text", type: "func", args: $ARGS
 ALIAS PYGAME_INIT, CALLAPI name: "pygame_init", type: "func"
 ALIAS DRAWSTRLINE, @draw_str_line $ARGS
 ALIAS ADD, @add $ARGS
 ALIAS CIRCAREA, @circ_area $ARGS
-ALIAS C_ADD, CALLCFFI lib: PLATFORM<>DLLNAME(_libname), type: 'func', args: $ARGS
+ALIAS C_ADD, CALLCFFI lib: DLLNAME(_libname), type: 'func', args: $ARGS
 
-FUNC draw_str_line(char ! STR, length ! INT) {
+FN draw_str_line(char % STR, length % INT) {
     PRINTFLN {REPEAT char, length}
 }
 
-FUNC add(a, b) { OUT a + b ELSE nil}
+FN add(a, b) { RETURN a + b ELSE nil }
 
-FUNC circ_area(r ! FLOAT) ! FLOAT {
-    LET pi 3.14
-    OUT pi * r ^ 2
+FN circ_area(r % FLOAT) % FLOAT {
+    SET pi AS FLOAT = 3.14
+    RETURN pi * r ^ 2
 }

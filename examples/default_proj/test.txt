@@ -1,0 +1,176 @@
+Файл ./lib/std/fmt.ub
+``` UB
+
+// Encoding: UTF-8
+
+PACKAGE !fmt
+
+// NOTE: bytecode and injection is not implemented yet. Using $CORE_CALL instead
+
+SET platform % STR = $CORE_CALL("get_platform", NIL) ELSE FATAL("Couldn't get platform!")
+$PREINIT {
+    IF platform == "POSIX" THEN SET std_endl % STR = !\n
+    ELSE SET std_endl % STR = '\n\r'
+}
+
+ALIAS PRINT, @stdcout(" " ^ $ARGS)
+ALIAS PRINTF, @stdcout(@formatstr " " ^ $ARGS)
+ALIAS PRINTLN, FN (msgs % STR[]) {
+    SET msg % STR = " " ^ msgs + std_endl
+    PRINT msg
+}
+
+ALIAS PRINTFLN, FN (msgs % STR[]) {
+    SET msg % STR = " " ^ msgs + std_endl
+    PRINTF msg
+}
+
+ALIAS INPUT, @stdcin
+ALIAS WAIT, FN (delay as FLOAT = 0.0) {
+    //! @title: WAIT command
+    //! @desc: if delay is 0 or NIL, then it awayts user input
+    //! otherwise it sleeps for <delay> seconds
+    IF delay <= 0 OR delay == NIL {
+        PRINTLN $TANSLATE "std.messages.console.press_any_key"
+        LET _ = @stdcin
+    } ELSE {
+        $CORE_CALL(!sleep, delay)
+    }
+}
+
+FN stdcout(msg AS STR, flush AS BOOL = false, log AS BOOL = false) {
+    $CORE_CALL("stdcout", [msg, flush]) ELSE FATAL("Error: CORE couldn't call stdcout", fulltrace=true)
+    IF log THEN LOG "CORE", "INFO", "stdcout: " + msg
+}
+
+FN stdcin(log AS BOOL = false) % (STR || NIL) {
+    LET result = $CORE_CALL("stdin", NIL) ELSE FATAL("Error: CORE couldn't call stdcin", fulltrace=true)
+    IF log THEN LOG "CORE", "INFO", "stdcin: " + msg
+    RETURN result AS STR ELSE NIL
+}
+
+FN formatstr(string as STR) % STR {
+    // FIXME: rewrite to native UB
+    $CORE_CALL("tmpfunc_formatstr", [string, $RUNTIME_CONTEXT])
+}
+
+MAINFN THEN FATAL("Do not run as executable")
+```
+
+Файл ./lib/std/testing.ub
+``` UB
+
+// Encoding: UTF-8
+
+PACKAGE !testing
+
+ALIAS ASSERT, FN(expression AS BOOL) {
+    IF NOT expression THEN FATAL(!Assertion Error)
+}
+
+// WIP
+ALIAS TEST, $NOTIMPLEMENTED
+ALIAS PERFORMANCE, $NOTIMPLEMENTED
+
+MAINFN THEN FATAL("Do not run as executable")
+```
+
+Файл hello_world.ub
+``` UB
+
+// Encoding: UTF-8
+
+// Preprocessor command are always in english
+// You can ommit it for the default, en_us subset
+// $SUBSET !default  // this is same as $SUBSET !en_us
+
+$PRELUDE
+/// so you don't have to write
+LOADPKG $LIB("std/fmt"), [!PRINTLN,
+                          !PRINTFLN,
+                          !PRINT,
+                          !INPUT,
+                          !WAIT] ///
+
+MAINFN {
+    PRINT "Enter your name: "
+    INPUT  // INPUT $VAR - will write from input to $VAR
+           // Just INPUT or INPUT $VAR is equvivalent
+    PRINTLN
+    PRINTFLN "Hello, {$VAR[STR]:~1}!"
+    WAIT
+}
+```
+
+Файл test.ub
+``` UB
+
+// Encoding: UTF-8
+
+//! @title test.ub
+//! @desc this is a simple assert testing
+
+// $SUBSET "default"
+$PRELUDE
+
+LOADPKG $LIB("std/testing"), [!ASSERT]
+
+MAINFN % UINT8 {
+
+    ASSERT 3 + 4 * 2 ^ (4 / 2) - 4 * (3 - 1) == 11
+    ASSERT 11 ~= '11'
+    ASSERT "Hello, " == "Hello, "
+    ASSERT "\"Hello, " ~= "'Hello, \'"
+
+    PRINTLN '\'This is a "TEST"\''
+
+    RETURN 0
+}
+```
+
+Файл test_import.ub
+``` UB
+
+// Encoding: UTF-8
+
+//! @title test_import
+//! @desc This is a sample package
+
+LOADPKG $LIB("std/strtools"), [!REPEAT]
+LOADPKG $LIB("std/calls"), [!CALLAPI, !CALLCFFI]
+LOADPKG $LIB("std/platform") ["DLLNAME"]
+
+PACKAGE test_import
+
+SET _libname % STR = !example
+
+ALIAS CGPRINTTEXT, CALLAPI name: "cg_print_text", type: "func", args: $ARGS
+ALIAS PYGAME_INIT, CALLAPI name: "pygame_init", type: "func"
+ALIAS DRAWSTRLINE, @draw_str_line $ARGS
+ALIAS ADD, @add $ARGS
+ALIAS CIRCAREA, @circ_area $ARGS
+ALIAS C_ADD, CALLCFFI lib: DLLNAME(_libname), type: 'func', args: $ARGS
+
+FN draw_str_line(char % STR, length % INT) {
+    PRINTFLN {REPEAT char, length}
+}
+
+FN add(a, b) { RETURN a + b ELSE nil }
+
+FN circ_area(r % FLOAT) % FLOAT {
+    SET pi AS FLOAT = 3.14
+    RETURN pi * r ^ 2
+}
+```
+
+Файл hello_world.ub
+``` UB
+
+// Encoding: UTF-8
+
+$SUBSET "default"
+$PRELUDE
+
+PRINTLN "Hello, World!"
+```
+
