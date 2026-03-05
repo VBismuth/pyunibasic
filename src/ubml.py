@@ -75,21 +75,16 @@ class UBMLParser:
             raise TypeError(f'cannot add {type(item).__name__} to '
                             f'{type(obj).__name__}')
 
-    def _check_text(self) -> bool:
-        if not self._text:
-            return False
-        return True
-
     def _skip_first_br(self):
         if self._text[self._pos] in '{[':  # ]}
             self._pos += 1
             self._col += 1
 
-    def _process_text(self) -> dict | list | None:
-        if not self._check_text() or\
-                self._detect_object_type(self._text[self._pos:]) is None:
-            return None
-        obj = self._detect_object_type(self._text[self._pos:])
+    def _process_text(self, type_ch: str | None = None) -> dict | list | None:
+        if type_ch and type_ch in '[{':  # }]
+            obj: type = dict if type_ch == '{' else list  # }
+        else:
+            obj = self._detect_object_type(self._text[self._pos:])
         self._skip_first_br()
         parsed: dict | list = obj()
         add_key: Any = ''
@@ -117,7 +112,7 @@ class UBMLParser:
             elif ch in '+-0123456789':
                 add_key = self._process_num(parsed, add_key)
             elif ch in '[{':  # }]
-                add_key = self._process_new_obj(parsed, add_key)
+                add_key = self._process_new_obj(parsed, add_key, ch)
             elif (ch == ']' and obj is list) or\
                     (ch == '}' and obj is dict):
                 self._col += 1
@@ -129,9 +124,11 @@ class UBMLParser:
                                          f"(pos: {self._pos})")
         return parsed
 
-    def _process_new_obj(self, parsed: dict | list, add_key: Any) -> Any:
+    def _process_new_obj(self, parsed: dict | list, add_key: Any,
+                         last_char=None) -> Any:
         is_dict: bool = isinstance(parsed, dict)
-        new_obj: dict | list = self._process_text() or {}
+        new_obj: dict | list = self._process_text(last_char) or\
+            ([] if last_char == '[' else {})
         if is_dict and add_key:
             self._append_to_obj(parsed, {add_key: new_obj})
             add_key = ''

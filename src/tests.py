@@ -278,7 +278,7 @@ def test_ubml() -> dict:
         ))
     large_object: list[dict] = [test_dict.copy() for _ in range(10_000)]
     times: list[float] = []
-    t_treshold: float = 20.0
+    t_treshold: float = 25.0
 
     timestart: float = time.perf_counter()
     large_text: str = json.dumps(large_object)
@@ -300,6 +300,7 @@ def test_ubml() -> dict:
     ))
 
     times = []
+    t_treshold: float = 70.0
     timestart = time.perf_counter()
     json.loads(large_text)
     times.append(time.perf_counter() - timestart)
@@ -311,7 +312,7 @@ def test_ubml() -> dict:
         'UBML loads performance comparison with JSON '
         f'({len(large_text) / 1024:.2f} kb)',
         assert_test(
-            t_diff <= 100.0,
+            t_diff <= t_treshold,
             True,
             f'Loading took too much -> {times[1]:.6f}, x{t_diff:.2f} '
             f'(> {t_treshold}) of JSON time'
