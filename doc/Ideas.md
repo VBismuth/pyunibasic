@@ -1,5 +1,5 @@
 # Ideas
-This file contains some ideas for the unibasic lang
+This file contains some ideas for the universalbasic lang
 
 ## Important notes
 - Make it so lexer could allow keyword starting with any letters
@@ -12,6 +12,7 @@ This file contains some ideas for the unibasic lang
 - [x] UBML (unibasic markup lang, like jsonh or whatever)
 - [ ] Subsets (unibasic in different lang, subset switches
 - [ ] Errors for interpreter for the above
+- [ ] Package manager (ubpac)
 ---
 
 ## Modules (file archives)
@@ -89,26 +90,28 @@ Like ``` FUNC () { PRINTLN 'ANON!'} ```
 
 ## Aliases
 Call functions, builtins or const variables by alias name, so
-```unibasic
-FUNC sum(min, max, step):INT {
-    LET answer:INT = 0
-    LET i:INT = min
-    UNTIL i >= max {
+```UB
+FN sum(min % INT, max % INT, step % INT) % INT {
+    LET answer % INT = 0
+    LET i % INT = min
+    UNTIL i >= max {  // or LOOP i <= max
         i += step
         answer += 1
     }
     RETURN answer
 }
-# ...
-ALIAS MULTIFUNC, FUNC () {LET name:STR = "Greg"; PRINTLN $"HELLO! {name}"}
-ALIAS PRINTLNARGS($ARGS), PRINTLN $ARGS
-ALIAS SUM_MIN_PLUS_ONE($ARGS), @sum($ARGS:0 + 1, $ARGS:1->2)
-# ...
+// ...
+ALIAS MULTIFUNC, FN () {LET name:STR = "Greg"; PRINTFLN "HELLO! {name}"}
+ALIAS PRINTLNARGS, PRINTLN $ARGS
+ALIAS SUM_MIN_PLUS_ONE, @sum($ARGS:1 + 1, $ARGS:2)
+// ...
 MULTIFUNC  # (HELLO! Greg)
-PRINTLNARGS "This", " is ", $TO_STR(69)  # This is 69
+PRINTLNARGS "This", " is ", CONVERTTO[STR](69)  # This is 69
 SUM_MIN_PLUS_ONE  0, 4, 1  #  3
 ```
 
-## API calls to interpreter
+## API calls to interpreter, CORE_CALL
 Get custom functions from interpreter realisation
+
+##
 
